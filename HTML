@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Послелоги в китайском языке</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧩 Расположи предметы правильно</h1>
+            <p class="instruction">Перетащи предметы на сцену согласно заданию</p>
+        </header>
+
+        <div class="game-area">
+            <div class="scene" id="scene">
+                <!-- Сцена будет заполняться через JS -->
+            </div>
+            
+            <div class="items-panel">
+                <div class="items-container" id="itemsContainer">
+                    <!-- Предметы для перетаскивания -->
+                </div>
+            </div>
+        </div>
+
+        <div class="task-panel">
+            <div class="task" id="task">Задание появится здесь...</div>
+            <button id="checkBtn" class="btn primary">Проверить</button>
+            <button id="nextBtn" class="btn">Следующее задание</button>
+        </div>
+
+        <div id="result" class="result" aria-live="polite"></div>
+
+        <!-- SVG-спрайт -->
+        <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+            <!-- Комнатные элементы -->
+            <symbol id="room" viewBox="0 0 800 600">
+                <rect x="0" y="0" width="800" height="600" fill="#f0f8ff"/>
+                <rect x="50" y="50" width="700" height="500" fill="#e6f2ff" stroke="#c0d6eb" stroke-width="2"/>
+                <circle cx="750" cy="100" r="30" fill="#ffd700"/>
+                <rect x="100" y="400" width="200" height="100" fill="#deb887" rx="10"/>
+                <rect x="500" y="400" width="150" height="100" fill="#deb887" rx="10"/>
+                <rect x="300" y="200" width="200" height="150" fill="#add8e6" rx="15"/>
+                <rect x="600" y="150" width="100" height="100" fill="#90ee90" rx="10"/>
+                <rect x="150" y="150" width="100" height="100" fill="#ffb6c1" rx="10"/>
+                <rect x="400" y="100" width="80" height="80" fill="#dda0dd" rx="10"/>
+                <rect x="250" y="500" width="300" height="50" fill="#cd853f"/>
+            </symbol>
+            
+            <!-- Предметы -->
+            <symbol id="cat" viewBox="0 0 100 100">
+                <circle cx="50" cy="40" r="25" fill="#8b4513"/>
+                <circle cx="40" cy="35" r="5" fill="#fff"/>
+                <circle cx="60" cy="35" r="5" fill="#fff"/>
+                <circle cx="40" cy="35" r="2" fill="#000"/>
+                <circle cx="60" cy="35" r="2" fill="#000"/>
+                <path d="M30,50 Q50,70 70,50" stroke="#8b4513" stroke-width="3" fill="none"/>
+                <path d="M20,30 L10,20 M80,30 L90,20" stroke="#8b4513" stroke-width="3"/>
+            </symbol>
+            
+            <symbol id="ball" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="40" fill="#ff6347"/>
+                <circle cx="50" cy="50" r="30" fill="#ff4500"/>
+                <circle cx="50" cy="50" r="20" fill="#ff6347"/>
+            </symbol>
+            
+            <symbol id="panda" viewBox="0 0 100 100">
+                <circle cx="50" cy="40" r="25" fill="#fff" stroke="#000" stroke-width="2"/>
+                <circle cx="40" cy="35" r="8" fill="#000"/>
+                <circle cx="60" cy="35" r="8" fill="#000"/>
+                <circle cx="40" cy="35" r="3" fill="#fff"/>
+                <circle cx="60" cy="35" r="3" fill="#fff"/>
+                <ellipse cx="50" cy="65" rx="15" ry="10" fill="#000"/>
+                <ellipse cx="35" cy="55" rx="8" ry="15" fill="#000"/>
+                <ellipse cx="65" cy="55" rx="8" ry="15" fill="#000"/>
+            </symbol>
+            
+            <symbol id="dog" viewBox="0 0 100 100">
+                <circle cx="50" cy="40" r="20" fill="#d2691e"/>
+                <circle cx="45" cy="35" r="4" fill="#fff"/>
+                <circle cx="55" cy="35" r="4" fill="#fff"/>
+                <circle cx="45" cy="35" r="2" fill="#000"/>
+                <circle cx="55" cy="35" r="2" fill="#000"/>
+                <path d="M30,50 Q50,70 70,50" stroke="#d2691e" stroke-width="3" fill="none"/>
+                <path d="M25,30 L15,25 M75,30 L85,25" stroke="#d2691e" stroke-width="3"/>
+                <path d="M40,60 L35,70 M60,60 L65,70" stroke="#d2691e" stroke-width="3"/>
+            </symbol>
+            
+            <symbol id="bird" viewBox="0 0 100 100">
+                <ellipse cx="50" cy="50" rx="20" ry="15" fill="#87ceeb"/>
+                <path d="M30,50 Q50,30 70,50 Q50,70 30,50" fill="#87cefa"/>
+                <circle cx="40" cy="45" r="3" fill="#000"/>
+                <path d="M70,50 L80,45 L75,55 Z" fill="#ff4500"/>
+                <path d="M30,50 L20,45 L25,55 Z" fill="#ff4500"/>
+            </symbol>
+            
+            <symbol id="cup" viewBox="0 0 100 100">
+                <rect x="35" y="30" width="30" height="40" rx="15" fill="#dda0dd"/>
+                <rect x="30" y="25" width="40" height="10" rx="5" fill="#dda0dd"/>
+                <rect x="65" y="35" width="10" height="30" rx="5" fill="#dda0dd"/>
+            </symbol>
+            
+            <symbol id="book" viewBox="0 0 100 100">
+                <rect x="20" y="30" width="60" height="40" rx="5" fill="#cd853f"/>
+                <rect x="25" y="35" width="50" height="5" fill="#d2691e"/>
+                <rect x="25" y="45" width="50" height="5" fill="#d2691e"/>
+                <rect x="25" y="55" width="50" height="5" fill="#d2691e"/>
+            </symbol>
+            
+            <symbol id="person" viewBox="0 0 100 100">
+                <circle cx="50" cy="30" r="15" fill="#ffdbac"/>
+                <rect x="40" y="45" width="20" height="30" fill="#4682b4"/>
+                <rect x="30" y="75" width="15" height="20" fill="#4682b4"/>
+                <rect x="55" y="75" width="15" height="20" fill="#4682b4"/>
+            </symbol>
+        </svg>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,287 @@
+// Задания
+const tasks = [
+    { text: "把猫放在桌子上。", object: "cat", target: "table", position: "on" },
+    { text: "把球放在椅子下面。", object: "ball", target: "chair", position: "under" },
+    { text: "把熊猫放在箱子里。", object: "panda", target: "box", position: "in" },
+    { text: "把狗放在汽车后面。", object: "dog", target: "car", position: "behind" },
+    { text: "把鸟放在树旁边。", object: "bird", target: "tree", position: "beside" },
+    { text: "把杯子放在桌子左边。", object: "cup", target: "table", position: "left" },
+    { text: "把书放在桌子右边。", object: "book", target: "table", position: "right" },
+    { text: "把人放在房子前面。", object: "person", target: "house", position: "front" }
+];
+
+// Координаты целевых зон
+const targetZones = {
+    table: { x: 250, y: 500, width: 300, height: 50 },
+    chair: { x: 100, y: 400, width: 200, height: 100 },
+    box: { x: 300, y: 200, width: 200, height: 150 },
+    car: { x: 500, y: 400, width: 150, height: 100 },
+    tree: { x: 600, y: 150, width: 100, height: 100 },
+    house: { x: 150, y: 150, width: 100, height: 100 },
+    shelf: { x: 400, y: 100, width: 80, height: 80 }
+};
+
+// DOM элементы
+const scene = document.getElementById('scene');
+const itemsContainer = document.getElementById('itemsContainer');
+const taskElement = document.getElementById('task');
+const checkBtn = document.getElementById('checkBtn');
+const nextBtn = document.getElementById('nextBtn');
+const resultDiv = document.getElementById('result');
+
+// Глобальные переменные
+let currentTask = null;
+let droppedItems = [];
+let draggedItem = null;
+
+// Инициализация игры
+function initGame() {
+    // Создаем сцену
+    scene.innerHTML = '<svg class="scene-svg" width="100%" height="100%"><use href="#room" /></svg>';
+    
+    // Перемешиваем задания и выбираем первое
+    shuffleArray(tasks);
+    loadNextTask();
+    
+    // Обработчики событий
+    checkBtn.addEventListener('click', checkAnswer);
+    nextBtn.addEventListener('click', loadNextTask);
+}
+
+// Загрузка следующего задания
+function loadNextTask() {
+    if (tasks.length === 0) {
+        // Если все задания выполнены, перемешиваем заново
+        const originalTasks = [
+            { text: "把猫放在桌子上。", object: "cat", target: "table", position: "on" },
+            { text: "把球放在椅子下面。", object: "ball", target: "chair", position: "under" },
+            { text: "把熊猫放在箱子里。", object: "panda", target: "box", position: "in" },
+            { text: "把狗放在汽车后面。", object: "dog", target: "car", position: "behind" },
+            { text: "把鸟放在树旁边。", object: "bird", target: "tree", position: "beside" },
+            { text: "把杯子放在桌子左边。", object: "cup", target: "table", position: "left" },
+            { text: "把书放在桌子右边。", object: "book", target: "table", position: "right" },
+            { text: "把人放在房子前面。", object: "person", target: "house", position: "front" }
+        ];
+        tasks.push(...originalTasks);
+        shuffleArray(tasks);
+    }
+    
+    currentTask = tasks.pop();
+    taskElement.textContent = currentTask.text;
+    
+    // Очищаем сцену и панель предметов
+    clearScene();
+    createItemsPanel();
+    resultDiv.className = 'result';
+    resultDiv.textContent = '';
+}
+
+// Очистка сцены
+function clearScene() {
+    droppedItems = [];
+    const existingItems = scene.querySelectorAll('.dropped-item');
+    existingItems.forEach(item => item.remove());
+}
+
+// Создание панели предметов
+function createItemsPanel() {
+    itemsContainer.innerHTML = '';
+    const itemNames = ['cat', 'ball', 'panda', 'dog', 'bird', 'cup', 'book', 'person'];
+    
+    itemNames.forEach(name => {
+        const item = document.createElement('div');
+        item.className = 'draggable-item';
+        item.dataset.type = name;
+        item.innerHTML = `<svg><use href="#${name}" /></svg>`;
+        
+        // Добавляем обработчики перетаскивания
+        item.addEventListener('dragstart', handleDragStart);
+        item.addEventListener('dragend', handleDragEnd);
+        
+        itemsContainer.appendChild(item);
+    });
+}
+
+// Обработчики перетаскивания
+function handleDragStart(e) {
+    draggedItem = e.target;
+    e.dataTransfer.setData('text/plain', draggedItem.dataset.type);
+    setTimeout(() => draggedItem.style.opacity = '0.4', 0);
+}
+
+function handleDragEnd(e) {
+    draggedItem.style.opacity = '1';
+    draggedItem = null;
+}
+
+// Настройка сцены для приема перетаскиваемых элементов
+scene.addEventListener('dragover', e => {
+    e.preventDefault();
+});
+
+scene.addEventListener('drop', e => {
+    e.preventDefault();
+    const itemType = e.dataTransfer.getData('text/plain');
+    
+    if (!itemType) return;
+    
+    // Создаем новый элемент на сцене
+    const newItem = document.createElement('div');
+    newItem.className = 'dropped-item';
+    newItem.dataset.type = itemType;
+    newItem.innerHTML = `<svg><use href="#${itemType}" /></svg>`;
+    
+    // Позиционируем элемент в точке сброса
+    const rect = scene.getBoundingClientRect();
+    const x = e.clientX - rect.left - 30; // 30 - половина ширины элемента
+    const y = e.clientY - rect.top - 30; // 30 - половина высоты элемента
+    
+    newItem.style.left = `${x}px`;
+    newItem.style.top = `${y}px`;
+    
+    // Добавляем обработчики для перемещения уже размещенных элементов
+    newItem.addEventListener('mousedown', startDragging);
+    
+    scene.appendChild(newItem);
+    droppedItems.push(newItem);
+});
+
+// Перемещение уже размещенных элементов
+function startDragging(e) {
+    const item = e.target;
+    const rect = scene.getBoundingClientRect();
+    const offsetX = e.clientX - item.getBoundingClientRect().left;
+    const offsetY = e.clientY - item.getBoundingClientRect().top;
+    
+    function moveItem(e) {
+        const x = e.clientX - rect.left - offsetX;
+        const y = e.clientY - rect.top - offsetY;
+        item.style.left = `${x}px`;
+        item.style.top = `${y}px`;
+    }
+    
+    function stopDragging() {
+        document.removeEventListener('mousemove', moveItem);
+        document.removeEventListener('mouseup', stopDragging);
+    }
+    
+    document.addEventListener('mousemove', moveItem);
+    document.addEventListener('mouseup', stopDragging);
+}
+
+// Проверка ответа
+function checkAnswer() {
+    if (!currentTask) return;
+    
+    // Находим размещенный предмет нужного типа
+    const placedItem = droppedItems.find(item => item.dataset.type === currentTask.object);
+    
+    if (!placedItem) {
+        resultDiv.textContent = '❌ Разместите предмет на сцене!';
+        resultDiv.className = 'result error';
+        return;
+    }
+    
+    // Получаем координаты предмета
+    const itemRect = placedItem.getBoundingClientRect();
+    const sceneRect = scene.getBoundingClientRect();
+    const itemX = itemRect.left - sceneRect.left + 30; // центр предмета
+    const itemY = itemRect.top - sceneRect.top + 30; // центр предмета
+    
+    // Получаем координаты целевой зоны
+    const zone = targetZones[currentTask.target];
+    
+    // Проверяем позицию
+    let isCorrect = false;
+    
+    switch (currentTask.position) {
+        case 'on':
+            isCorrect = (
+                itemX >= zone.x && 
+                itemX <= zone.x + zone.width &&
+                itemY >= zone.y - 20 && 
+                itemY <= zone.y + 20
+            );
+            break;
+        case 'under':
+            isCorrect = (
+                itemX >= zone.x && 
+                itemX <= zone.x + zone.width &&
+                itemY >= zone.y + zone.height && 
+                itemY <= zone.y + zone.height + 50
+            );
+            break;
+        case 'in':
+            isCorrect = (
+                itemX >= zone.x && 
+                itemX <= zone.x + zone.width &&
+                itemY >= zone.y && 
+                itemY <= zone.y + zone.height
+            );
+            break;
+        case 'behind':
+            isCorrect = (
+                itemX >= zone.x + zone.width && 
+                itemX <= zone.x + zone.width + 50 &&
+                itemY >= zone.y && 
+                itemY <= zone.y + zone.height
+            );
+            break;
+        case 'beside':
+            isCorrect = (
+                (itemX >= zone.x - 50 && itemX <= zone.x) ||
+                (itemX >= zone.x + zone.width && itemX <= zone.x + zone.width + 50)
+            ) && (
+                itemY >= zone.y && 
+                itemY <= zone.y + zone.height
+            );
+            break;
+        case 'left':
+            isCorrect = (
+                itemX >= zone.x - 50 && 
+                itemX <= zone.x &&
+                itemY >= zone.y && 
+                itemY <= zone.y + zone.height
+            );
+            break;
+        case 'right':
+            isCorrect = (
+                itemX >= zone.x + zone.width && 
+                itemX <= zone.x + zone.width + 50 &&
+                itemY >= zone.y && 
+                itemY <= zone.y + zone.height
+            );
+            break;
+        case 'front':
+            isCorrect = (
+                itemX >= zone.x && 
+                itemX <= zone.x + zone.width &&
+                itemY >= zone.y - 50 && 
+                itemY <= zone.y
+            );
+            break;
+    }
+    
+    if (isCorrect) {
+        placedItem.classList.add('correct');
+        resultDiv.textContent = '✅ Отлично! Правильно!';
+        resultDiv.className = 'result success';
+    } else {
+        placedItem.classList.add('incorrect');
+        resultDiv.textContent = '❌ Почти правильно! Попробуйте еще раз.';
+        resultDiv.className = 'result error';
+    }
+}
+
+// Вспомогательные функции
+function shuffleArray(array) {
+    const newArray = [...array];
+    for (let i = newArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    }
+    return newArray;
+}
+
+// Инициализация при загрузке
+document.addEventListener('DOMContentLoaded', initGame);
